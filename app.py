@@ -43,9 +43,12 @@ def session_(session):
     return render_template("session.html", session=temp_sessions[0])
 
 
-@socketio.on("login", namespace="/client")
+@socketio.on("login")
 def login(obj):
     username = obj.get("username")
+    session = obj.get("session")
+    print(f"login: {username}, {session}")
+
     peer_id = str(uuid.uuid4())
     user_peer_ids[username] = peer_id
 
@@ -56,8 +59,7 @@ def login(obj):
 
 @socketio.on("connect")
 def on_connect():
-    print("on connect!")
-    return user_peer_ids
+    pass
 
 
 if __name__ == '__main__':

@@ -8,7 +8,8 @@ $("#submit-username-button").on("click", function () {
     }
 
     socket.emit("login", {
-        "username": username
+        "username": username,
+        "session": session_url
     }, function (obj) {
         console.log("logged in!");
         console.log(obj);
@@ -16,7 +17,7 @@ $("#submit-username-button").on("click", function () {
 });
 
 $(document).ready(function () {
-    socket = io("/client");
+    socket = io();
     socket.on('connect', function () {
         console.log("socketio connect!");
     });

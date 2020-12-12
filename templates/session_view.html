@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sessions</title>
+
+    <link href="https://getbootstrap.com/docs/5.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<main class="container">
+    <div class="my-3 p-3 bg-white rounded shadow-sm">
+        <h6 class="border-bottom pb-2 mb-0">Current Sessions</h6>
+        {% for session in sessions %}
+            <div class="d-flex text-muted pt-3">
+                <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-gray-dark">{{session.name}}</strong>
+                        <a href="#">Join</a>
+                    </div>
+                    <span class="d-block">{{session.players}} current players</span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</body>
+</html>

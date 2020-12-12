@@ -12,14 +12,17 @@
 
 <div class="container">
     <h1>{{session.name}}</h1>
-    <hr>
 
     <form class="login-form">
         <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="">
-            <button class="btn btn-outline-secondary" type="button" id="button-addon1">Join Audio</button>
+            <input type="text" class="form-control" placeholder="" id="username-textbox">
+            <button class="btn btn-outline-secondary" type="button" id="submit-username-button">Join Audio</button>
         </div>
     </form>
+
+    <p class="lead" id="username-display"></p>
+    <hr>
+
     <br>
     <br>
 
@@ -30,6 +33,7 @@
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
 <script src="/static/session.js"></script>
 

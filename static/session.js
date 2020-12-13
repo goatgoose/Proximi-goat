@@ -12,7 +12,6 @@ $("#submit-username-button").on("click", function () {
         "session": session_url
     }, function (obj) {
         console.log("logged in!");
-        console.log(obj);
     });
 });
 
@@ -20,5 +19,8 @@ $(document).ready(function () {
     socket = io();
     socket.on('connect', function () {
         console.log("socketio connect!");
+    });
+    socket.on("update_peers", function(peer_ids) {
+        console.log(peer_ids);
     });
 });

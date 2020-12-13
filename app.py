@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, request
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 import uuid
 import json
 
@@ -20,7 +20,10 @@ temp_sessions = [
     }
 ]
 
-user_peer_ids = {}  # session url : { username : peer id }
+user_peer_ids = {
+    "test_session_1": {}
+}  # session url : { username : peer id }
+socket_map = {}  # socket id : session, peer id
 
 
 @app.route("/call_example")
@@ -50,16 +53,20 @@ def login(obj):
     print(f"login: {username}, {session}")
 
     peer_id = str(uuid.uuid4())
-    user_peer_ids[username] = peer_id
-
-    return json.dumps({
-        "peer_id": peer_id
-    })
+    if session in user_peer_ids:
+        user_peer_ids[session][username] = peer_id
+        join_room(session)
+        emit("update_peers", user_peer_ids.get(session), room=session)
 
 
 @socketio.on("connect")
 def on_connect():
-    pass
+    print("connect!")
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    print("disconnect!")
 
 
 if __name__ == '__main__':

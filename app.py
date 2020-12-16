@@ -23,7 +23,7 @@ temp_sessions = [
 user_peer_ids = {
     "test_session_1": {}
 }  # session url : { username : peer id }
-socket_map = {}  # socket id : session, peer id
+socket_map = {}  # socket id : session, username
 
 
 @app.route("/call_example")
@@ -50,11 +50,13 @@ def session_(session):
 def login(obj):
     username = obj.get("username")
     session = obj.get("session")
-    print(f"login: {username}, {session}")
-
     peer_id = str(uuid.uuid4())
-    if session in user_peer_ids:
+
+    if session in user_peer_ids and username:
+        print(f"login: {username}, {session}")
         user_peer_ids[session][username] = peer_id
+        socket_map[request.values.get("t")] = (session, username)
+
         join_room(session)
         emit("update_peers", user_peer_ids.get(session), room=session)
 
@@ -67,6 +69,13 @@ def on_connect():
 @socketio.on("disconnect")
 def on_disconnect():
     print("disconnect!")
+    socket_id = request.values.get("t")
+    if socket_id in socket_map:
+        session, username = socket_map.pop(socket_id)
+        user_peer_ids[session].pop(username)
+
+        join_room(session)
+        emit("update_peers", user_peer_ids.get(session), room=session)
 
 
 if __name__ == '__main__':

@@ -1,9 +1,13 @@
 var socket;
 
 var active_peer_ids = {}; // username : peer ids
+var usernames = {}; // peer id : username
+
 var my_username = undefined;
 var my_peer = undefined;
 var my_negotiation_value = Math.random();
+
+var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
 $("#submit-username-button").on("click", function () {
     var username_textbox = $("#username-textbox");
@@ -32,10 +36,34 @@ $(document).ready(function () {
             my_peer = new Peer(peer_ids[my_username]);
 
             my_peer.on("connection", function (conn) {
-                conn.on("open", function() {
+                conn.on("open", function () {
                     handleConn(peer_ids, conn);
                 });
             });
+            my_peer.on('call', function (call) {
+                console.log("call received");
+                getUserMedia({video: false, audio: true}, function (stream) {
+                    call.answer(stream);
+                    call.on('stream', function (remoteStream) {
+                        addStream(remoteStream, usernames[call.peer]);
+                    });
+                }, function (err) {
+                    console.log('Failed to get local stream: receive', err);
+                });
+            });
+        }
+
+        var to_update = [];
+        for (let username in active_peer_ids) {
+            if (active_peer_ids[username] !== peer_ids[username]) {
+                to_update.push(username);
+            }
+        }
+        for (let username in to_update) {
+            $("#" + active_peer_ids[username]).remove();
+            console.log("user update: " + username);
+            delete usernames[active_peer_ids[username]];
+            delete active_peer_ids[username];
         }
 
         for (let username in peer_ids) {
@@ -49,46 +77,56 @@ $(document).ready(function () {
                 continue;
             }
             active_peer_ids[username] = peer_id;
+            usernames[peer_id] = username;
 
             let peer_conn = my_peer.connect(peer_id);
-            peer_conn.on("error", function (error) {
-                console.log("error");
-                console.log(error);
-            });
             peer_conn.on("open", function () {
                 handleConn(peer_ids, peer_conn);
             });
         }
 
+        to_update = [];
         for (let username in active_peer_ids) {
-            if (!username in peer_ids) {
-                active_peer_ids[username].disconnect();
-                console.log("user disconnect: " + username);
-                delete active_peer_ids[username];
+            if (!(username in peer_ids)) {
+                to_update.push(username);
             }
+        }
+        for (let username in to_update) {
+            $("#" + active_peer_ids[username]).remove();
+            console.log("user disconnect: " + username);
+            delete usernames[active_peer_ids[username]];
+            delete active_peer_ids[username];
         }
     });
 });
 
-function addStream(remoteStream) {
+function addStream(remoteStream, username) {
+    var stream_div = $("<li></li>");
+    stream_div.attr("id", remoteStream.id);
+    stream_div.attr("class", "list-group-item");
+
+    stream_div.append($("<strong class='text-gray-dark'>" + username + "</strong>"))
+    stream_div.append($("<br>"));
+
     var stream_element = $("<audio>");
-    stream_element.attr("id", remoteStream.id);
+    stream_element.attr("id", remoteStream.id + "_audio")
     stream_element.attr("autoplay", "autoplay");
     stream_element.attr("muted", "true");
     stream_element.attr("controls", "controls");
-    $("#audio_clients").append(stream_element);
+    stream_div.append(stream_element);
 
-    var player = document.querySelector("#" + remoteStream.id);
+    $("#audio_clients").append(stream_div);
+
+    var player = document.querySelector("#" + remoteStream.id + "_audio");
     player.srcObject = remoteStream;
     player.play();
 }
 
-function callPeer(call_id) {
-    var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+function callPeer(call_id, username) {
     getUserMedia({video: false, audio: true}, function (stream) {
-        var call = peer.call(call_id, stream);
+        var call = my_peer.call(call_id, stream);
         call.on('stream', function (remoteStream) {
-            addStream(remoteStream);
+            addStream(remoteStream, username);
         });
     }, function (err) {
         console.log('Failed to get local stream: send', err);
@@ -104,6 +142,7 @@ function handleConn(peer_ids, conn) {
             var peer_negotiation_value = data["negotiation_value"];
             if (my_negotiation_value > peer_negotiation_value) {
                 console.log("I will call " + data["username"]);
+                callPeer(data["peer_id"], data["username"]);
             }
         }
     });

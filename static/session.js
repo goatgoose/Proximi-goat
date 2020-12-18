@@ -3,6 +3,7 @@ var socket;
 var active_peer_ids = {}; // username : peer ids
 var my_username = undefined;
 var my_peer = undefined;
+var my_negotiation_value = Math.random();
 
 $("#submit-username-button").on("click", function () {
     var username_textbox = $("#username-textbox");
@@ -29,6 +30,12 @@ $(document).ready(function () {
         console.log("update peers");
         if (my_peer === undefined) {
             my_peer = new Peer(peer_ids[my_username]);
+
+            my_peer.on("connection", function (conn) {
+                conn.on("open", function() {
+                    handleConn(peer_ids, conn);
+                });
+            });
         }
 
         for (let username in peer_ids) {
@@ -44,29 +51,12 @@ $(document).ready(function () {
             active_peer_ids[username] = peer_id;
 
             let peer_conn = my_peer.connect(peer_id);
-            let my_negotiation_value = Math.random();
-
-            my_peer.on("connection", function (conn) {
-                conn.on("data", function (data) {
-                    console.log("data receive");
-                    console.log(data);
-                    if ("negotiation_value" in data) {
-                        console.log(my_negotiation_value);
-                        var peer_negotiation_value = data["negotiation_value"];
-                        if (my_negotiation_value > peer_negotiation_value) {
-                            console.log("I will call " + data["username"]);
-                        }
-                    }
-                });
-
-                let message = {
-                    "negotiation_value": my_negotiation_value,
-                    "username": my_username
-                }
-                console.log("send to " + peer_id);
-                console.log(message);
-
-                conn.send(message);
+            peer_conn.on("error", function (error) {
+                console.log("error");
+                console.log(error);
+            });
+            peer_conn.on("open", function () {
+                handleConn(peer_ids, peer_conn);
             });
         }
 
@@ -103,4 +93,28 @@ function callPeer(call_id) {
     }, function (err) {
         console.log('Failed to get local stream: send', err);
     });
+}
+
+function handleConn(peer_ids, conn) {
+    conn.on("data", function (data) {
+        console.log("data receive");
+        console.log(data);
+        if ("negotiation_value" in data) {
+            console.log(my_negotiation_value);
+            var peer_negotiation_value = data["negotiation_value"];
+            if (my_negotiation_value > peer_negotiation_value) {
+                console.log("I will call " + data["username"]);
+            }
+        }
+    });
+
+    let message = {
+        "negotiation_value": my_negotiation_value,
+        "username": my_username,
+        "peer_id": peer_ids[my_username]
+    }
+    console.log("sending:");
+    console.log(message);
+
+    conn.send(message);
 }

@@ -56,6 +56,7 @@ $(document).ready(function () {
         var to_update = [];
         for (let username in active_peer_ids) {
             if (active_peer_ids[username] !== peer_ids[username]) {
+                console.log("pushing to update: " + username);
                 to_update.push(username);
             }
         }

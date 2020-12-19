@@ -72,6 +72,7 @@ def on_disconnect():
     socket_id = request.values.get("t")
     if socket_id in socket_map:
         session, username = socket_map.pop(socket_id)
+        print(user_peer_ids)
         user_peer_ids[session].pop(username)
 
         join_room(session)

@@ -32,6 +32,10 @@ $(document).ready(function () {
     });
     socket.on("update_peers", function (peer_ids) {
         console.log("update peers");
+        console.log(peer_ids);
+        console.log("active peers:");
+        console.log(active_peer_ids);
+
         if (my_peer === undefined) {
             my_peer = new Peer(peer_ids[my_username]);
 
@@ -53,30 +57,22 @@ $(document).ready(function () {
             });
         }
 
-        var to_update = [];
-        for (let username in active_peer_ids) {
-            if (active_peer_ids[username] !== peer_ids[username]) {
-                console.log("pushing to update: " + username);
-                to_update.push(username);
-            }
-        }
-        for (let username in to_update) {
-            $("#" + active_peer_ids[username]).remove();
-            console.log("user update: " + username);
-            delete usernames[active_peer_ids[username]];
-            delete active_peer_ids[username];
-        }
-
         for (let username in peer_ids) {
             if (username === my_username) {
                 continue;
             }
-            console.log(username);
 
-            let peer_id = peer_ids[username]
-            if (peer_id === active_peer_ids[username]) {
-                continue;
+            let peer_id = peer_ids[username];
+            if (username in active_peer_ids) {
+                if (peer_ids[username] !== active_peer_ids[username]) {
+                    console.log("update stream: ");
+                    console.log(username);
+                    removeStream(username);
+                } else {
+                    continue;
+                }
             }
+
             active_peer_ids[username] = peer_id;
             usernames[peer_id] = username;
 
@@ -86,31 +82,30 @@ $(document).ready(function () {
             });
         }
 
-        to_update = [];
+        var to_remove = [];
         for (let username in active_peer_ids) {
             if (!(username in peer_ids)) {
-                to_update.push(username);
+                to_remove.push(username);
             }
         }
-        for (let username in to_update) {
-            $("#" + active_peer_ids[username]).remove();
-            console.log("user disconnect: " + username);
-            delete usernames[active_peer_ids[username]];
-            delete active_peer_ids[username];
+        for (let username of to_remove) {
+            console.log("remove stream:");
+            console.log(username);
+            removeStream(username);
         }
     });
 });
 
 function addStream(remoteStream, username) {
     var stream_div = $("<li></li>");
-    stream_div.attr("id", remoteStream.id);
+    stream_div.attr("id", "li_" + active_peer_ids[username]);
     stream_div.attr("class", "list-group-item");
 
     stream_div.append($("<strong class='text-gray-dark'>" + username + "</strong>"))
     stream_div.append($("<br>"));
 
     var stream_element = $("<audio>");
-    stream_element.attr("id", remoteStream.id + "_audio")
+    stream_element.attr("id", "audio_" + active_peer_ids[username])
     stream_element.attr("autoplay", "autoplay");
     stream_element.attr("muted", "true");
     stream_element.attr("controls", "controls");
@@ -118,9 +113,18 @@ function addStream(remoteStream, username) {
 
     $("#audio_clients").append(stream_div);
 
-    var player = document.querySelector("#" + remoteStream.id + "_audio");
+    var player = document.querySelector("#audio_" + active_peer_ids[username]);
     player.srcObject = remoteStream;
     player.play();
+}
+
+function removeStream(username) {
+    console.log("peer id:");
+    console.log(active_peer_ids[username]);
+
+    $("#li_" + active_peer_ids[username]).remove();
+    delete usernames[active_peer_ids[username]];
+    delete active_peer_ids[username];
 }
 
 function callPeer(call_id, username) {

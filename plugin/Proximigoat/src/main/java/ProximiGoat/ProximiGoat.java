@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,6 +18,14 @@ public class ProximiGoat extends JavaPlugin implements Listener {
         getLogger().info("ProximiGoat enabled!");
 
         getServer().getPluginManager().registerEvents(this, this);
+
+        FileConfiguration config = this.getConfig();
+        config.addDefault("socket_server_address", "https://127.0.0.1:1142/");
+        config.options().copyDefaults(true);
+        saveConfig();
+
+        String socketServerAddress = config.getString("socket_server_address");
+        getLogger().info(socketServerAddress);
     }
 
     @Override

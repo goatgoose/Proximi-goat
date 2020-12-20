@@ -79,5 +79,18 @@ def on_disconnect():
         emit("update_peers", user_peer_ids.get(session), room=session)
 
 
+@socketio.on("register")
+def on_register(obj):
+    print("register:")
+    print(obj)
+    return "registered!"
+
+
+@socketio.on("player_move")
+def on_player_move(obj):
+    print("player move:")
+    print(obj)
+
+
 if __name__ == '__main__':
     socketio.run(app, host="192.168.7.233", port=1142, ssl_context="adhoc")

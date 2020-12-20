@@ -7,22 +7,9 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = str(uuid.uuid4())
 socketio = SocketIO(app)
 
-temp_sessions = [
-    {
-        "name": "Test Session 1",
-        "url_name": "test_session_1",
-        "players": 12
-    },
-    {
-        "name": "Test Session 2",
-        "url_name": "test_session_2",
-        "players": 17
-    }
-]
+sessions = {}
 
-user_peer_ids = {
-    "test_session_1": {}
-}  # session url : { username : peer id }
+user_peer_ids = {}  # session url : { username : peer id }
 socket_map = {}  # socket id : session, username
 
 
@@ -38,12 +25,12 @@ def home():
 
 @app.route("/session_list")
 def session_list():
-    return render_template("session_list.html", sessions=temp_sessions)
+    return render_template("session_list.html", sessions=[sessions[session] for session in sessions])
 
 
 @app.route("/session/<session>")
 def session_(session):
-    return render_template("session.html", session=temp_sessions[0])
+    return render_template("session.html", session=sessions[session])
 
 
 @socketio.on("login")
@@ -80,16 +67,29 @@ def on_disconnect():
 
 
 @socketio.on("register")
-def on_register(obj):
+def on_register(session):
     print("register:")
-    print(obj)
+    print(session)
+
+    url_session = session.replace(" ", "_").lower()
+    if url_session not in sessions:
+        sessions[url_session] = {
+            "name": session,
+            "url_name": url_session
+        }
+
+    if url_session not in user_peer_ids:
+        user_peer_ids[url_session] = {}
+
     return "registered!"
 
 
 @socketio.on("player_move")
 def on_player_move(obj):
-    print("player move:")
-    print(obj)
+    url_session = obj["session"].replace(" ", "_").lower()
+    if url_session in user_peer_ids:
+        join_room(url_session)
+        emit("player_move", obj, room=url_session)
 
 
 if __name__ == '__main__':

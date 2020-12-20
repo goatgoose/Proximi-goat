@@ -94,6 +94,9 @@ $(document).ready(function () {
             removeStream(username);
         }
     });
+    socket.on("player_move", function(event) {
+        console.log(event);
+    });
 });
 
 function addStream(remoteStream, username) {

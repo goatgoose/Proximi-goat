@@ -93,11 +93,9 @@ public class ProximiGoat extends JavaPlugin implements Listener {
                     .writeTimeout(0, TimeUnit.MILLISECONDS)
                     .build();
 
-// default settings for all sockets
             IO.setDefaultOkHttpWebSocketFactory(okHttpClient);
             IO.setDefaultOkHttpCallFactory(okHttpClient);
 
-// set as an option
             IO.Options opts = new IO.Options();
             opts.callFactory = okHttpClient;
             opts.webSocketFactory = okHttpClient;

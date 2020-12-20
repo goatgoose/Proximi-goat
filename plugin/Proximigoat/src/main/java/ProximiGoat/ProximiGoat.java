@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 public class ProximiGoat extends JavaPlugin implements Listener {
 
@@ -87,6 +88,9 @@ public class ProximiGoat extends JavaPlugin implements Listener {
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
                     .hostnameVerifier(myHostnameVerifier)
                     .sslSocketFactory(mySSLContext.getSocketFactory(), trustAllCerts[0])
+                    .connectTimeout(0, TimeUnit.MILLISECONDS)
+                    .readTimeout(0, TimeUnit.MILLISECONDS)
+                    .writeTimeout(0, TimeUnit.MILLISECONDS)
                     .build();
 
 // default settings for all sockets
